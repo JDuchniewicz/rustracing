@@ -55,7 +55,7 @@ impl Vec3 {
     }
 
     #[inline]
-    pub fn unit_vector(v: &Vec3) -> Vec3 {
+    pub fn unit_vector(v: Vec3) -> Vec3 {
         v / v.length()
     }
 }
