@@ -1,9 +1,12 @@
 mod color;
+mod hittable;
 mod ray;
+mod sphere;
 mod vec3;
 
 use color::write_color;
 use ray::Ray;
+use sphere::Sphere;
 use std::io::{self, Write};
 use vec3::{Color, Point3, Vec3};
 
