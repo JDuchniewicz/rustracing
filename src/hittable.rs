@@ -9,10 +9,19 @@ pub struct HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
 impl HitRecord {
+    pub fn with_values(p: Point3, t: f64) -> HitRecord {
+        HitRecord {
+            p,
+            normal: p,
+            t,
+            front_face: false,
+        }
+    }
+
     #[inline]
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: &Vec3) -> () {
         self.front_face = Vec3::dot(&ray.direction, outward_normal) < 0.0;
