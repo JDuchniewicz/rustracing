@@ -8,9 +8,9 @@ pub fn write_color(stream: &mut impl Write, pixel_color: Color, samples_per_pixe
 
     // Divide the color by the number of samples
     let scale = 1.0 / samples_per_pixel as f64;
-    r *= scale;
-    g *= scale;
-    b *= scale;
+    r = (scale * r).sqrt();
+    g = (scale * g).sqrt();
+    b = (scale * b).sqrt();
 
     stream.write_fmt(format_args!(
         "{} {} {}\n",

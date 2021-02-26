@@ -1,3 +1,4 @@
+use crate::{random_f64, utils::random_f64_minmax};
 use std::fmt;
 use std::ops;
 
@@ -57,6 +58,45 @@ impl Vec3 {
     #[inline]
     pub fn unit_vector(v: Vec3) -> Vec3 {
         v / v.length()
+    }
+
+    #[inline]
+    pub fn vec3_random() -> Vec3 {
+        Vec3::with_values(random_f64(), random_f64(), random_f64())
+    }
+
+    #[inline]
+    pub fn vec3_random_minmax(min: f64, max: f64) -> Vec3 {
+        Vec3::with_values(
+            random_f64_minmax(min, max),
+            random_f64_minmax(min, max),
+            random_f64_minmax(min, max),
+        )
+    }
+
+    #[inline]
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::vec3_random_minmax(-1.0, 1.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
+    #[inline]
+    pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+        let in_unit_sphere = Vec3::random_in_unit_sphere();
+        if Vec3::dot(&in_unit_sphere, normal) > 0.0 {
+            in_unit_sphere
+        } else {
+            -in_unit_sphere
+        }
+    }
+
+    #[inline]
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::unit_vector(Vec3::random_in_unit_sphere())
     }
 }
 
