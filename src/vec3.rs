@@ -98,6 +98,16 @@ impl Vec3 {
     pub fn random_unit_vector() -> Vec3 {
         Vec3::unit_vector(Vec3::random_in_unit_sphere())
     }
+
+    pub fn near_zero(&self) -> bool {
+        // TODO: check if is_normal() is not enough
+        const S: f64 = 1.0e-8;
+        self.x.abs() < S && self.y.abs() < S && self.z.abs() < S
+    }
+
+    pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        *v - 2.0 * Vec3::dot(v, n) * n
+    }
 }
 
 impl ops::Add<&Vec3> for Vec3 {
@@ -160,6 +170,18 @@ impl ops::Mul<&Vec3> for Vec3 {
     }
 }
 
+impl ops::Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+    #[inline]
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
+    }
+}
+
 impl ops::Mul<f64> for Vec3 {
     type Output = Vec3;
     #[inline]
@@ -175,6 +197,17 @@ impl ops::Mul<f64> for Vec3 {
 impl ops::Mul<Vec3> for f64 {
     type Output = Vec3;
     fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
+
+impl ops::Mul<&Vec3> for f64 {
+    type Output = Vec3;
+    fn mul(self, rhs: &Vec3) -> Self::Output {
         Vec3 {
             x: self * rhs.x,
             y: self * rhs.y,

@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use std::rc::Rc;
 
 pub struct HittableList {
-    objects: Vec<Rc<Box<dyn Hittable>>>,
+    objects: Vec<Rc<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -13,7 +13,7 @@ impl HittableList {
         }
     }
 
-    pub fn from_hittable(object: Rc<Box<dyn Hittable>>) -> HittableList {
+    pub fn from_hittable(object: Rc<dyn Hittable>) -> HittableList {
         let mut list = HittableList {
             objects: Vec::new(),
         };
@@ -25,7 +25,7 @@ impl HittableList {
         self.objects.clear()
     }
 
-    pub fn add(&mut self, object: Rc<Box<dyn Hittable>>) -> () {
+    pub fn add(&mut self, object: Rc<dyn Hittable>) -> () {
         self.objects.push(object)
     }
 }

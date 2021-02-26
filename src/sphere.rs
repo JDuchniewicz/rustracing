@@ -1,10 +1,15 @@
-use crate::hittable::{HitRecord, Hittable};
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
+use crate::{
+    hittable::{HitRecord, Hittable},
+    material::Material,
+};
+use std::rc::Rc;
 
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    material: Option<Rc<dyn Material>>,
 }
 
 impl Sphere {
@@ -12,11 +17,16 @@ impl Sphere {
         Sphere {
             center: Point3::new(),
             radius: 0.0,
+            material: None,
         }
     }
 
-    pub fn with_values(center: Point3, radius: f64) -> Sphere {
-        Sphere { center, radius }
+    pub fn with_values(center: Point3, radius: f64, material: Rc<dyn Material>) -> Sphere {
+        Sphere {
+            center,
+            radius,
+            material: Some(material),
+        }
     }
 }
 
@@ -42,7 +52,11 @@ impl Hittable for Sphere {
             }
         }
 
-        let mut rec: Option<HitRecord> = Some(HitRecord::with_values(ray.at(root), root));
+        let mut rec: Option<HitRecord> = Some(HitRecord::with_values(
+            ray.at(root),
+            root,
+            self.material.as_ref().unwrap().clone(),
+        ));
         let outward_normal: Vec3 = (rec.as_ref().unwrap().p - self.center) / self.radius;
         rec.as_mut().unwrap().set_face_normal(ray, &outward_normal);
 
