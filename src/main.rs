@@ -12,7 +12,7 @@ use camera::Camera;
 use color::write_color;
 use hittable::Hittable;
 use hittable_list::HittableList;
-use material::{Lambertian, Metal};
+use material::{Dielectric, Lambertian, Metal};
 use ray::Ray;
 use sphere::Sphere;
 use std::io::{self, Write};
@@ -72,9 +72,9 @@ fn main() {
     let mut world: HittableList = HittableList::new();
 
     let material_ground = Rc::new(Lambertian::with_values(&Color::with_values(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(Lambertian::with_values(&Color::with_values(0.7, 0.3, 0.3)));
-    let material_left = Rc::new(Metal::with_values(&Color::with_values(0.8, 0.8, 0.8), 0.3));
-    let material_right = Rc::new(Metal::with_values(&Color::with_values(0.8, 0.6, 0.2), 1.0));
+    let material_center = Rc::new(Lambertian::with_values(&Color::with_values(0.1, 0.2, 0.5)));
+    let material_left = Rc::new(Dielectric::with_values(1.5));
+    let material_right = Rc::new(Metal::with_values(&Color::with_values(0.8, 0.6, 0.2), 0.0));
 
     world.add(Rc::new(Sphere::with_values(
         Point3::with_values(0.0, -100.5, -1.0),
@@ -89,6 +89,11 @@ fn main() {
     world.add(Rc::new(Sphere::with_values(
         Point3::with_values(-1.0, 0.0, -1.0),
         0.5,
+        material_left.clone(),
+    )));
+    world.add(Rc::new(Sphere::with_values(
+        Point3::with_values(-1.0, 0.0, -1.0),
+        -0.4,
         material_left,
     )));
     world.add(Rc::new(Sphere::with_values(
