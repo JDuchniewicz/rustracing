@@ -103,7 +103,13 @@ fn main() {
     )));
 
     // Camera
-    let cam: Camera = Camera::new();
+    let cam: Camera = Camera::new(
+        &Point3::with_values(-2.0, 2.0, 1.0),
+        &Point3::with_values(0.0, 0.0, -1.0),
+        &Vec3::with_values(0.0, 1.0, 0.0),
+        20.0,
+        ASPECT_RATIO,
+    );
 
     // Render
 
