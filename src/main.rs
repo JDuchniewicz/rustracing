@@ -14,7 +14,12 @@ use hittable_list::HittableList;
 use material::{Dielectric, Lambertian, Metal};
 use rand::Rng;
 use ray::Ray;
+use rayon::prelude::*;
 use sphere::Sphere;
+use std::{
+    io::{stderr, Write},
+    sync::Arc,
+};
 use vec3::{Color, Point3, Vec3};
 
 fn random_scene(rng: &mut impl rand::Rng) -> HittableList {
@@ -113,14 +118,15 @@ fn main() {
     const ASPECT_RATIO: f64 = 3.0 / 2.0;
     const IMAGE_WIDTH: i32 = 1200;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
+    const NUM_PIXELS: i32 = IMAGE_WIDTH * IMAGE_HEIGHT;
     const SAMPLES_PER_PIXEL: i32 = 500;
-    const MAX_DEPTH: i32 = 50;
+    const MAX_DEPTH: i32 = 500;
 
     // Cache thread rng
     let mut rng = rand::thread_rng();
 
     // World
-    let world: HittableList = random_scene(&mut rng);
+    let world = Arc::new(random_scene(&mut rng));
 
     // Camera
     let lookfrom = Point3::new(13.0, 2.0, 3.0);
@@ -143,24 +149,75 @@ fn main() {
 
     println!("P3\n{} {}\n255", IMAGE_WIDTH, IMAGE_HEIGHT);
 
-    for j in (0..IMAGE_HEIGHT).rev().take(5) {
-        eprintln!("Scanlines remaining {}", j);
-        for i in 0..IMAGE_WIDTH {
-            let mut pixel_color = Color::default();
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH - 1) as f64;
-                let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
-                let ray = cam.get_ray(u, v);
-                pixel_color += ray_color(&ray, &world, MAX_DEPTH);
-            }
+    let n_finished = Arc::new(std::sync::atomic::AtomicI32::new(0));
 
-            write_color(&mut handle, pixel_color, SAMPLES_PER_PIXEL).unwrap_or_else(|err| {
-                panic!(
-                    "Oops, error {} saving pixel {} for indices i {} j {}",
-                    err, pixel_color, i, j
-                )
+    let pixels = (0..IMAGE_HEIGHT)
+        .into_par_iter()
+        .rev()
+        .map(move |j| {
+            let world = world.clone();
+            let n_finished = n_finished.clone();
+            (0..IMAGE_WIDTH).into_par_iter().map(move |i| {
+                let world = world.clone();
+                let n_finished = n_finished.clone();
+
+                let mut rng = rand::thread_rng();
+
+                let mut pixel_color = Color::default();
+                for _ in 0..SAMPLES_PER_PIXEL {
+                    let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH - 1) as f64;
+                    let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT - 1) as f64;
+                    let ray = cam.get_ray(u, v);
+                    pixel_color += ray_color(&ray, world.as_ref(), MAX_DEPTH);
+                }
+
+                let n = n_finished.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+
+                if n % (NUM_PIXELS / 1000) == 0 || n == NUM_PIXELS - 1 {
+                    eprint!(
+                        "\rCalculated {}/{} pixels ({:.1?}%)",
+                        n + 1,
+                        NUM_PIXELS,
+                        (n + 1) as f64 / NUM_PIXELS as f64 * 100.0,
+                    );
+                    stderr().flush().unwrap();
+                }
+
+                pixel_color
             })
+        })
+        .flatten();
+
+    let mut pixel_vec = Vec::with_capacity(NUM_PIXELS as usize);
+    pixel_vec.par_extend(pixels);
+
+    eprintln!();
+
+    for (i, pixel_color) in pixel_vec.into_iter().enumerate() {
+        if i as i32 % (NUM_PIXELS / 1000) == 0 || i as i32 == NUM_PIXELS - 1 {
+            let n = i + 1;
+            eprint!(
+                "\rWriting pixel {}/{} ({:.1?}%)",
+                n,
+                NUM_PIXELS,
+                n as f64 / NUM_PIXELS as f64 * 100.0,
+            );
+
+            stderr().flush().unwrap();
         }
+
+        write_color(&mut handle, pixel_color, SAMPLES_PER_PIXEL).unwrap_or_else(|err| {
+            panic!(
+                "Oops, error {} saving color {} for pixel {}/{}",
+                err,
+                pixel_color,
+                i + 1,
+                NUM_PIXELS
+            )
+        })
     }
+
+    eprintln!();
+
     eprintln!("Done");
 }

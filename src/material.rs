@@ -3,9 +3,8 @@ use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
 use rand::random;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
-    fn duplicate(&self) -> Box<dyn Material>;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -33,10 +32,6 @@ impl Material for Lambertian {
         let attenuation = self.albedo;
 
         Some((attenuation, scattered))
-    }
-
-    fn duplicate(&self) -> Box<dyn Material> {
-        Box::new(*self)
     }
 }
 
@@ -69,10 +64,6 @@ impl Material for Metal {
         let attenuation = self.albedo;
 
         Some((attenuation, scattered))
-    }
-
-    fn duplicate(&self) -> Box<dyn Material> {
-        Box::new(*self)
     }
 }
 
@@ -124,9 +115,5 @@ impl Material for Dielectric {
 
         let scattered = Ray::new(rec.p, direction);
         Some((attenuation, scattered))
-    }
-
-    fn duplicate(&self) -> Box<dyn Material> {
-        Box::new(*self)
     }
 }
