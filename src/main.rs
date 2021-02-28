@@ -11,17 +11,16 @@ use camera::Camera;
 use color::write_color;
 use hittable::Hittable;
 use hittable_list::HittableList;
-use material::{Dielectric, Lambertian, Material, Metal};
+use material::{Dielectric, Lambertian, Metal};
 use rand::Rng;
 use ray::Ray;
 use sphere::Sphere;
-use std::rc::Rc;
 use vec3::{Color, Point3, Vec3};
 
 fn random_scene(rng: &mut impl rand::Rng) -> HittableList {
     let mut world = HittableList::new();
 
-    let ground_material = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     world.add(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -38,35 +37,33 @@ fn random_scene(rng: &mut impl rand::Rng) -> HittableList {
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let sphere_material: Rc<dyn Material>;
-
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Vec3::vec3_random(rng) * Vec3::vec3_random(rng);
-                    sphere_material = Rc::new(Lambertian::new(albedo));
-                    world.add(Sphere::new(center, 0.2, sphere_material));
+
+                    world.add(Sphere::new(center, 0.2, Lambertian::new(albedo)));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Vec3::vec3_random_range(rng, 0.5..1.0);
                     let fuzz = rng.gen_range(0.0..0.5);
-                    sphere_material = Rc::new(Metal::new(albedo, fuzz));
-                    world.add(Sphere::new(center, 0.2, sphere_material));
+
+                    world.add(Sphere::new(center, 0.2, Metal::new(albedo, fuzz)));
                 } else {
                     // glass
-                    sphere_material = Rc::new(Dielectric::new(1.5));
-                    world.add(Sphere::new(center, 0.2, sphere_material));
+
+                    world.add(Sphere::new(center, 0.2, Dielectric::new(1.5)));
                 }
             }
         }
     }
 
-    let material1 = Rc::new(Dielectric::new(1.5));
+    let material1 = Dielectric::new(1.5);
     world.add(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, material1));
 
-    let material2 = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
     world.add(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, material2));
 
-    let material3 = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
     world.add(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, material3));
 
     world
@@ -156,13 +153,13 @@ fn main() {
                 let ray = cam.get_ray(u, v);
                 pixel_color += ray_color(&ray, &world, MAX_DEPTH);
             }
-            match write_color(&mut handle, pixel_color, SAMPLES_PER_PIXEL) {
-                Ok(_) => continue,
-                Err(e) => eprint!(
+
+            write_color(&mut handle, pixel_color, SAMPLES_PER_PIXEL).unwrap_or_else(|err| {
+                panic!(
                     "Oops, error {} saving pixel {} for indices i {} j {}",
-                    e, pixel_color, i, j
-                ),
-            }
+                    err, pixel_color, i, j
+                )
+            })
         }
     }
     eprintln!("Done");

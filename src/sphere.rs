@@ -4,21 +4,20 @@ use crate::{
     hittable::{HitRecord, Hittable},
     material::Material,
 };
-use std::rc::Rc;
 
 #[derive(Default)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: Option<Rc<dyn Material>>,
+    material: Option<Box<dyn Material>>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, material: Rc<dyn Material>) -> Sphere {
+    pub fn new(center: Point3, radius: f64, material: impl Material + 'static) -> Self {
         Sphere {
             center,
             radius,
-            material: Some(material),
+            material: Some(Box::new(material)),
         }
     }
 }
@@ -38,14 +37,14 @@ impl Hittable for Sphere {
 
         // Find the nearest root that lies in the acceptable range
         let mut root = -(sqrtd + half_b) / a;
-        if !(t_min..t_max).contains(&root) {
+        if root < t_min || root > t_max {
             root = (sqrtd - half_b) / a;
-            if !(t_min..t_max).contains(&root) {
+            if root < t_min || root > t_max {
                 return None;
             }
         }
 
-        let mut rec = HitRecord::new(ray.at(root), root, self.material.as_ref().map(Rc::clone));
+        let mut rec = HitRecord::new(ray.at(root), root, self.material.as_ref().map(Box::as_ref));
 
         let outward_normal: Vec3 = (rec.p - self.center) / self.radius;
         rec.set_face_normal(ray, outward_normal);
