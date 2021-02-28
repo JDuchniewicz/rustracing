@@ -78,7 +78,7 @@ fn random_scene() -> HittableList {
 
     let material3 = Rc::new(Metal::with_values(&Color::with_values(0.7, 0.6, 0.5), 0.0));
     world.add(Rc::new(Sphere::with_values(
-        Point3::with_values(-4.0, 1.0, 0.0),
+        Point3::with_values(4.0, 1.0, 0.0),
         1.0,
         material3,
     )));
@@ -111,7 +111,6 @@ fn ray_color(ray: &Ray, world: &dyn Hittable, depth: i32) -> Color {
             .unwrap()
             .scatter(ray, &hit_record)
         {
-            let target: Point3 = hit_record.p + Vec3::random_in_hemisphere(&hit_record.normal);
             return attenuation * ray_color(&scattered, world, depth - 1);
         } else {
             return Color::new();
@@ -168,7 +167,13 @@ fn main() {
                 let ray = cam.get_ray(u, v);
                 pixel_color += ray_color(&ray, &world, MAX_DEPTH);
             }
-            write_color(&mut handle, pixel_color, SAMPLES_PER_PIXEL);
+            match write_color(&mut handle, pixel_color, SAMPLES_PER_PIXEL) {
+                Ok(_) => continue,
+                Err(e) => eprint!(
+                    "Oops, error {} saving pixel {} for indices i {} j {}",
+                    e, pixel_color, i, j
+                ),
+            }
         }
     }
     eprintln!("Done");
