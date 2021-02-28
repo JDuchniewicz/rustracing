@@ -1,6 +1,5 @@
 use crate::{
     ray::Ray,
-    utils::degrees_to_radians,
     vec3::{Point3, Vec3},
 };
 
@@ -17,28 +16,28 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(
-        lookfrom: &Point3,
-        lookat: &Point3,
-        vup: &Vec3,
+        lookfrom: Point3,
+        lookat: Point3,
+        vup: Vec3,
         vfow: f64,
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
     ) -> Camera {
-        let theta: f64 = degrees_to_radians(vfow);
+        let theta: f64 = vfow.to_radians();
         let h: f64 = (theta / 2.0).tan();
         let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
 
-        let w = Vec3::unit_vector(*lookfrom - *lookat);
-        let u = Vec3::unit_vector(Vec3::cross(vup, &w));
-        let v = Vec3::cross(&w, &u);
+        let w = (lookfrom - lookat).normalize();
+        let u = vup.cross(w).normalize();
+        let v = w.cross(u);
 
         let mut camera = Camera {
-            origin: *lookfrom,
+            origin: lookfrom,
             horizontal: focus_dist * viewport_width * u,
             vertical: focus_dist * viewport_height * v,
-            lower_left_corner: Point3::new(),
+            lower_left_corner: Point3::default(),
             w,
             u,
             v,
@@ -55,7 +54,7 @@ impl Camera {
         let rd: Vec3 = self.lens_radius * Vec3::random_in_unit_disk();
         let offset: Vec3 = self.u * rd.x + self.v * rd.y;
 
-        Ray::with_values(
+        Ray::new(
             self.origin + offset,
             self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset,
         )

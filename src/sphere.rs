@@ -6,6 +6,7 @@ use crate::{
 };
 use std::rc::Rc;
 
+#[derive(Default)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
@@ -13,15 +14,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new() -> Sphere {
-        Sphere {
-            center: Point3::new(),
-            radius: 0.0,
-            material: None,
-        }
-    }
-
-    pub fn with_values(center: Point3, radius: f64, material: Rc<dyn Material>) -> Sphere {
+    pub fn new(center: Point3, radius: f64, material: Rc<dyn Material>) -> Sphere {
         Sphere {
             center,
             radius,
@@ -32,9 +25,9 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let oc: Vec3 = ray.origin - self.center;
+        let oc = ray.origin - self.center;
         let a = ray.direction.length_squared();
-        let half_b = Vec3::dot(&oc, &ray.direction);
+        let half_b = oc.dot(ray.direction);
         let c = oc.length_squared() - self.radius * self.radius;
 
         let discriminant = half_b * half_b - a * c;
@@ -44,22 +37,19 @@ impl Hittable for Sphere {
         let sqrtd = discriminant.sqrt();
 
         // Find the nearest root that lies in the acceptable range
-        let mut root = (-half_b - sqrtd) / a;
-        if root < t_min || t_max < root {
-            root = (-half_b + sqrtd) / a;
-            if root < t_min || t_max < root {
+        let mut root = -(sqrtd + half_b) / a;
+        if !(t_min..t_max).contains(&root) {
+            root = (sqrtd - half_b) / a;
+            if !(t_min..t_max).contains(&root) {
                 return None;
             }
         }
 
-        let mut rec: Option<HitRecord> = Some(HitRecord::with_values(
-            ray.at(root),
-            root,
-            self.material.as_ref().unwrap().clone(),
-        ));
-        let outward_normal: Vec3 = (rec.as_ref().unwrap().p - self.center) / self.radius;
-        rec.as_mut().unwrap().set_face_normal(ray, &outward_normal);
+        let mut rec = HitRecord::new(ray.at(root), root, self.material.as_ref().map(Rc::clone));
 
-        rec
+        let outward_normal: Vec3 = (rec.p - self.center) / self.radius;
+        rec.set_face_normal(ray, outward_normal);
+
+        Some(rec)
     }
 }
