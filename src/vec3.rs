@@ -41,12 +41,10 @@ impl Vec3 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    #[inline]
     pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
         u.x * v.x + u.y * v.y + u.z * v.z
     }
 
-    #[inline]
     pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
         Vec3 {
             x: u.y * v.z - u.z * v.y,
@@ -55,17 +53,14 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn unit_vector(v: Vec3) -> Vec3 {
         v / v.length()
     }
 
-    #[inline]
     pub fn vec3_random() -> Vec3 {
         Vec3::with_values(random_f64(), random_f64(), random_f64())
     }
 
-    #[inline]
     pub fn vec3_random_minmax(min: f64, max: f64) -> Vec3 {
         Vec3::with_values(
             random_f64_minmax(min, max),
@@ -74,7 +69,6 @@ impl Vec3 {
         )
     }
 
-    #[inline]
     pub fn random_in_unit_sphere() -> Vec3 {
         loop {
             let p = Vec3::vec3_random_minmax(-1.0, 1.0);
@@ -84,7 +78,6 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
         let in_unit_sphere = Vec3::random_in_unit_sphere();
         if Vec3::dot(&in_unit_sphere, normal) > 0.0 {
@@ -94,7 +87,6 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn random_in_unit_disk() -> Vec3 {
         loop {
             let p = Vec3::with_values(
@@ -108,7 +100,6 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn random_unit_vector() -> Vec3 {
         Vec3::unit_vector(Vec3::random_in_unit_sphere())
     }
@@ -133,7 +124,7 @@ impl Vec3 {
 
 impl ops::Add<&Vec3> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn add(self, rhs: &Vec3) -> Self::Output {
         Vec3 {
             x: self.x + rhs.x,
@@ -145,7 +136,7 @@ impl ops::Add<&Vec3> for Vec3 {
 
 impl ops::Add<Vec3> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn add(self, rhs: Vec3) -> Self::Output {
         Vec3 {
             x: self.x + rhs.x,
@@ -157,7 +148,7 @@ impl ops::Add<Vec3> for Vec3 {
 
 impl ops::Sub<&Vec3> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn sub(self, rhs: &Vec3) -> Self::Output {
         Vec3 {
             x: self.x - rhs.x,
@@ -169,7 +160,7 @@ impl ops::Sub<&Vec3> for Vec3 {
 
 impl ops::Sub<Vec3> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn sub(self, rhs: Vec3) -> Self::Output {
         Vec3 {
             x: self.x - rhs.x,
@@ -181,7 +172,7 @@ impl ops::Sub<Vec3> for Vec3 {
 
 impl ops::Mul<&Vec3> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn mul(self, rhs: &Vec3) -> Self::Output {
         Vec3 {
             x: self.x * rhs.x,
@@ -193,7 +184,7 @@ impl ops::Mul<&Vec3> for Vec3 {
 
 impl ops::Mul<Vec3> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn mul(self, rhs: Vec3) -> Self::Output {
         Vec3 {
             x: self.x * rhs.x,
@@ -205,7 +196,7 @@ impl ops::Mul<Vec3> for Vec3 {
 
 impl ops::Mul<f64> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn mul(self, rhs: f64) -> Self::Output {
         Vec3 {
             x: self.x * rhs,
@@ -239,7 +230,7 @@ impl ops::Mul<&Vec3> for f64 {
 
 impl ops::Div<f64> for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn div(self, rhs: f64) -> Self::Output {
         Vec3 {
             x: self.x / rhs,
@@ -251,7 +242,7 @@ impl ops::Div<f64> for Vec3 {
 
 impl ops::Div<f64> for &Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn div(self, rhs: f64) -> Self::Output {
         Vec3 {
             x: self.x / rhs,
@@ -263,7 +254,7 @@ impl ops::Div<f64> for &Vec3 {
 
 impl ops::Neg for Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn neg(self) -> Self::Output {
         Vec3 {
             x: -self.x,
@@ -275,7 +266,7 @@ impl ops::Neg for Vec3 {
 
 impl ops::Neg for &Vec3 {
     type Output = Vec3;
-    #[inline]
+
     fn neg(self) -> Self::Output {
         Vec3 {
             x: -self.x,
@@ -318,7 +309,6 @@ impl ops::DivAssign<f64> for Vec3 {
 }
 
 impl fmt::Display for Vec3 {
-    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", self.x, self.y, self.z)
     }
