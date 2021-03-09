@@ -17,13 +17,12 @@ pub fn write_color(
     g = (scale * g).sqrt();
     b = (scale * b).sqrt();
 
-    match stream.write_fmt(format_args!(
-        "{} {} {}\n",
-        (256.0 * r.clamp(0.0, 0.999)) as i32,
-        (256.0 * g.clamp(0.0, 0.999)) as i32,
-        (256.0 * b.clamp(0.0, 0.999)) as i32
-    )) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(e),
-    }
+    writeln!(
+        stream,
+        "{} {} {}",
+        ((r * (u8::MAX as f64 + 1.)) as i32).clamp(0, u8::MAX as i32),
+        ((g * (u8::MAX as f64 + 1.)) as i32).clamp(0, u8::MAX as i32),
+        ((b * (u8::MAX as f64 + 1.)) as i32).clamp(0, u8::MAX as i32)
+    )
+    .map(|_| ())
 }
