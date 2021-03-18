@@ -17,7 +17,7 @@ macro_rules! impl_binop {
         impl std::ops::$op_trait<$rhs> for $target {
             type Output = $target;
 
-            #[inline]
+
             fn $fn_name(self, rhs: $rhs) -> Self::Output {
                 $target {
                     x: self.x $op rhs.x,
@@ -32,7 +32,7 @@ macro_rules! impl_binop {
         impl std::ops::$op_trait<$rhs> for $target {
             type Output = $target;
 
-            #[inline]
+
             fn $fn_name(self, rhs:  $rhs) -> Self::Output {
                 $target {
                     x: self.x $op rhs,
@@ -45,7 +45,7 @@ macro_rules! impl_binop {
         impl std::ops::$op_trait<$target> for $rhs {
             type Output = $target;
 
-            #[inline]
+
             fn $fn_name(self, rhs:  $target) -> Self::Output {
                 $target {
                     x: rhs.x $op self,
@@ -67,7 +67,6 @@ impl_binop!(SCALAR, Div, div, /, Vec3, f64);
 impl ops::Neg for Vec3 {
     type Output = Vec3;
 
-    #[inline]
     fn neg(self) -> Self::Output {
         Vec3 {
             x: -self.x,
@@ -78,7 +77,6 @@ impl ops::Neg for Vec3 {
 }
 
 impl ops::AddAssign<Vec3> for Vec3 {
-    #[inline]
     fn add_assign(&mut self, rhs: Vec3) {
         self.x += rhs.x;
         self.y += rhs.y;
@@ -87,7 +85,6 @@ impl ops::AddAssign<Vec3> for Vec3 {
 }
 
 impl ops::MulAssign<f64> for Vec3 {
-    #[inline]
     fn mul_assign(&mut self, rhs: f64) {
         self.x *= rhs;
         self.y *= rhs;
@@ -96,7 +93,6 @@ impl ops::MulAssign<f64> for Vec3 {
 }
 
 impl ops::DivAssign<f64> for Vec3 {
-    #[inline]
     fn div_assign(&mut self, rhs: f64) {
         self.x /= rhs;
         self.y /= rhs;
@@ -105,27 +101,22 @@ impl ops::DivAssign<f64> for Vec3 {
 }
 
 impl Vec3 {
-    #[inline]
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }
     }
 
-    #[inline]
     pub fn length(self) -> f64 {
         self.length_squared().sqrt()
     }
 
-    #[inline]
     pub fn length_squared(self) -> f64 {
         self.dot(self)
     }
 
-    #[inline]
     pub fn dot(self, rhs: Vec3) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
-    #[inline]
     pub fn cross(self, rhs: Vec3) -> Vec3 {
         Vec3 {
             x: self.y * rhs.z - self.z * rhs.y,
@@ -134,17 +125,14 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn normalize(self) -> Vec3 {
         self / self.length()
     }
 
-    #[inline]
     pub fn vec3_random(rng: &mut impl rand::Rng) -> Vec3 {
         Vec3::new(rng.gen(), rng.gen(), rng.gen())
     }
 
-    #[inline]
     pub fn vec3_random_range(rng: &mut impl rand::Rng, range: std::ops::Range<f64>) -> Vec3 {
         Vec3::new(
             rng.gen_range(range.clone()),
@@ -153,7 +141,6 @@ impl Vec3 {
         )
     }
 
-    #[inline]
     pub fn random_in_unit_sphere(rng: &mut impl rand::Rng) -> Vec3 {
         loop {
             let p = Vec3::vec3_random_range(rng, -1.0..1.0);
@@ -163,7 +150,6 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn random_in_hemisphere(rng: &mut impl rand::Rng, normal: Vec3) -> Vec3 {
         let in_unit_sphere = Vec3::random_in_unit_sphere(rng);
         if in_unit_sphere.dot(normal) > 0.0 {
@@ -173,7 +159,6 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn random_in_unit_disk() -> Vec3 {
         let mut rng = rand::thread_rng();
 
@@ -186,24 +171,20 @@ impl Vec3 {
         }
     }
 
-    #[inline]
     pub fn random_unit_vector(rng: &mut impl rand::Rng) -> Vec3 {
         Vec3::random_in_unit_sphere(rng).normalize()
     }
 
-    #[inline]
     pub fn near_zero(&self) -> bool {
         // TODO: check if is_normal() is not enough
         const S: f64 = 1.0e-8;
         self.x.abs() < S && self.y.abs() < S && self.z.abs() < S
     }
 
-    #[inline]
     pub fn reflect(self, normal: Vec3) -> Vec3 {
         self - 2.0 * self.dot(normal) * normal
     }
 
-    #[inline]
     pub fn refract(self, n: Vec3, etai_over_etat: f64) -> Vec3 {
         let uv = self;
         let cos_theta = (-uv.dot(n)).min(1.0);
