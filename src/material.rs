@@ -1,47 +1,50 @@
+use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
-use crate::{hittable::HitRecord, utils::random_f64};
+use rand::random;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Lambertian {
     albedo: Color,
 }
 
 impl Lambertian {
-    pub fn with_values(albedo: &Color) -> Lambertian {
-        Lambertian { albedo: *albedo }
+    pub fn new(albedo: Color) -> Lambertian {
+        Lambertian { albedo }
     }
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>
+    fn scatter(&self, _ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>
     where
         Self: Sized,
     {
-        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction = rec.normal + Vec3::random_unit_vector(&mut rand::thread_rng());
 
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
-        let scattered = Ray::with_values(rec.p, scatter_direction);
+        let scattered = Ray::new(rec.p, scatter_direction);
         let attenuation = self.albedo;
 
         Some((attenuation, scattered))
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Metal {
     albedo: Color,
     fuzz: f64,
 }
 
 impl Metal {
-    pub fn with_values(albedo: &Color, f: f64) -> Metal {
+    pub fn new(albedo: Color, f: f64) -> Metal {
         Metal {
-            albedo: *albedo,
+            albedo,
             fuzz: f.clamp(-f64::INFINITY, 1.0),
         }
     }
@@ -52,22 +55,25 @@ impl Material for Metal {
     where
         Self: Sized,
     {
-        let reflected = Vec3::reflect(&Vec3::unit_vector(ray_in.direction), &rec.normal);
+        let reflected = ray_in.direction.normalize().reflect(rec.normal);
 
-        let scattered =
-            Ray::with_values(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
+        let scattered = Ray::new(
+            rec.p,
+            reflected + self.fuzz * Vec3::random_in_unit_sphere(&mut rand::thread_rng()),
+        );
         let attenuation = self.albedo;
 
         Some((attenuation, scattered))
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Dielectric {
     ir: f64,
 }
 
 impl Dielectric {
-    pub fn with_values(index_of_refraction: f64) -> Dielectric {
+    pub fn new(index_of_refraction: f64) -> Dielectric {
         Dielectric {
             ir: index_of_refraction,
         }
@@ -86,7 +92,7 @@ impl Material for Dielectric {
     where
         Self: Sized,
     {
-        let attenuation = Color::with_values(1.0, 1.0, 1.0);
+        let attenuation = Color::new(1.0, 1.0, 1.0);
         let refraction_ratio;
         if rec.front_face {
             refraction_ratio = 1.0 / self.ir;
@@ -94,20 +100,20 @@ impl Material for Dielectric {
             refraction_ratio = self.ir;
         }
 
-        let unit_direction = Vec3::unit_vector(ray_in.direction);
-        let cos_theta = Vec3::dot(&-unit_direction, &rec.normal).min(1.0);
+        let unit_direction = ray_in.direction.normalize();
+        let cos_theta = (-unit_direction).dot(rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
         let direction;
 
-        if cannot_refract || Dielectric::reflectance(cos_theta, refraction_ratio) > random_f64() {
-            direction = Vec3::reflect(&unit_direction, &rec.normal);
+        if cannot_refract || Dielectric::reflectance(cos_theta, refraction_ratio) > random() {
+            direction = unit_direction.reflect(rec.normal);
         } else {
-            direction = Vec3::refract(&unit_direction, &rec.normal, refraction_ratio);
+            direction = unit_direction.refract(rec.normal, refraction_ratio);
         }
 
-        let scattered = Ray::with_values(rec.p, direction);
+        let scattered = Ray::new(rec.p, direction);
         Some((attenuation, scattered))
     }
 }
